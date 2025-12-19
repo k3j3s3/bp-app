@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>野郞 BPM APP</title>
+<title>野郞 BPM APP - Pro</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -15,11 +15,11 @@ body {
   color: #1e293b;
 }
 
-/* 1. 상단 헤더 디자인 - 상하 폭 슬림하게 수정 */
+/* 1. 상단 헤더 */
 .header {
   background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
   color: white;
-  padding: 12px 16px; /* 상하 폭을 12px로 줄였습니다 */
+  padding: 12px 16px;
   text-align: center;
   border-radius: 0 0 16px 16px;
   box-shadow: 0 4px 8px rgba(30, 58, 138, 0.15);
@@ -28,13 +28,13 @@ body {
 
 .header h1 {
   margin: 0;
-  font-size: 19px; /* 글자 크기도 살짝 조절 */
+  font-size: 19px;
   font-weight: 800;
   letter-spacing: -0.5px;
 }
 
 .header p {
-  margin: 2px 0 0; /* 간격 축소 */
+  margin: 2px 0 0;
   font-size: 11px;
   opacity: 0.85;
 }
@@ -67,11 +67,12 @@ button {
   margin-top: 10px;
 }
 
-.btn-save { background:#ef4444; }
+.btn-save { background:#ef4444; margin-top: 14px; }
 .btn-list { background:#3b82f6; }
 .btn-chart { background:#8b5cf6; }
 .btn-edit { background:#10b981; }
-.btn-export { background:#64748b; }
+.btn-export { background:#64748b; flex: 1; }
+.btn-import { background:#94a3b8; flex: 1; }
 
 .view-toggle {
   display:flex;
@@ -80,9 +81,21 @@ button {
 }
 .view-toggle button { flex:1; margin-top:0; }
 
+/* 2. 상태 가이드 (도트 디자인) */
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+.dot-high { background: #ef4444; box-shadow: 0 0 5px #ef4444; }
+.dot-warn { background: #f59e0b; }
+.dot-normal { background: #10b981; }
+
 /* 리스트 높이 고정 및 스크롤 */
 #listWrapper {
-  max-height: 200px; 
+  max-height: 220px; 
   overflow-y: auto;
 }
 
@@ -90,19 +103,36 @@ button {
   display: flex !important;
   justify-content: space-between !important;
   align-items: center;
-  height: 40px;
+  height: 44px;
   padding: 0 4px;
   border-bottom: 1px solid #f1f5f9;
   font-size: 14px;
 }
 
-.record-text { flex: 1; text-align: left; }
+.record-info { display: flex; align-items: center; flex: 1; }
+.record-text { text-align: left; }
 
 .record input[type="checkbox"] {
   width: 20px;
   height: 20px;
   margin-left: 12px;
   accent-color: #ef4444;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  font-size: 12px;
+  color: #64748b;
+  text-align: center;
+}
+
+.summary-val {
+  font-size: 16px;
+  font-weight: 800;
+  color: #1e293b;
+  display: block;
 }
 
 .edit-hint {
@@ -119,7 +149,7 @@ button {
 
 <div class="header">
   <h1>野郞 BPM APP</h1>
-  <p>Blood Pressure Management System</p>
+  <p>Blood Pressure Management System Pro</p>
 </div>
 
 <div class="container">
@@ -127,11 +157,11 @@ button {
   <div class="card">
     <input type="date" id="date">
     <div style="display:flex; gap:8px;">
-      <input id="sys" placeholder="최고혈압" type="number">
-      <input id="dia" placeholder="최저혈압" type="number">
+      <input id="sys" placeholder="최고(SYS)" type="number">
+      <input id="dia" placeholder="최저(DIA)" type="number">
     </div>
     <input id="note" placeholder="메모 (선택사항)">
-    <button class="btn-save" id="saveBtn">기록 저장하기</button>
+    <button class="btn-save" id="saveBtn">오늘의 혈압 기록</button>
   </div>
 
   <div class="view-toggle">
@@ -139,14 +169,19 @@ button {
     <button class="btn-chart" id="chartBtn">그래프</button>
   </div>
 
-  <div class="card" id="summary" style="font-size:13px; text-align:center; color:#64748b; padding:10px;"></div>
+  <div class="card" id="summary">
+    <div class="summary-grid">
+      <div>최근 30일 평균<span class="summary-val" id="avgVal">0 / 0</span></div>
+      <div>전체 기록<span class="summary-val" id="totalCount">0건</span></div>
+    </div>
+  </div>
 
   <div class="card" id="chartView" style="display:none;">
     <canvas id="chart" style="height:200px;"></canvas>
   </div>
 
   <div class="card" id="listView">
-    <div id="editHint" class="edit-hint" style="display:none;">⚠️ 삭제할 항목을 체크해 주세요</div>
+    <div id="editHint" class="edit-hint" style="display:none;">⚠️ 삭제할 항목의 체크박스를 눌러주세요</div>
     <div id="listWrapper">
       <div id="list"></div>
     </div>
@@ -154,7 +189,11 @@ button {
 
   <div style="margin-top: 10px;">
     <button class="btn-edit" id="editBtn">데이터 편집 모드</button>
-    <button class="btn-export" id="exportBtn">CSV 내보내기</button>
+    <div style="display:flex; gap:8px;">
+      <button class="btn-export" id="exportBtn">CSV 내보내기</button>
+      <button class="btn-import" id="importBtn">CSV 불러오기</button>
+    </div>
+    <input type="file" id="fileInput" accept=".csv" style="display:none;">
   </div>
 
 </div>
@@ -165,11 +204,20 @@ let records = JSON.parse(localStorage.getItem('bp') || '[]');
 let editMode = false;
 let chart;
 
+// 기본 날짜 설정
 date.value = new Date().toISOString().substring(0, 10);
 
 saveBtn.onclick = () => {
-  if (!date.value || !sys.value || !dia.value) return;
-  records.push({ date: date.value, sys: parseInt(sys.value), dia: parseInt(dia.value), note: note.value });
+  if (!date.value || !sys.value || !dia.value) {
+    alert("수치를 입력해주세요.");
+    return;
+  }
+  records.push({ 
+    date: date.value, 
+    sys: parseInt(sys.value), 
+    dia: parseInt(dia.value), 
+    note: note.value 
+  });
   sys.value = dia.value = note.value = '';
   persist();
 };
@@ -183,14 +231,15 @@ chartBtn.onclick = () => {
 
 editBtn.onclick = () => {
   editMode = !editMode;
-  editBtn.innerText = editMode ? "편집 완료 (저장)" : "데이터 편집 모드";
+  editBtn.innerText = editMode ? "편집 완료" : "데이터 편집 모드";
   editBtn.style.background = editMode ? "#334155" : "#10b981";
   editHint.style.display = editMode ? 'block' : 'none';
   render();
 };
 
+// 3. CSV 내보내기 및 불러오기 기능
 exportBtn.onclick = () => {
-  if(records.length === 0) return;
+  if(records.length === 0) return alert('내보낼 데이터가 없습니다.');
   let csv='\ufeff날짜,최고혈압,최저혈압,메모\n';
   records.forEach(r=>csv+=`${r.date},${r.sys},${r.dia},${r.note||''}\n`);
   const a=document.createElement('a');
@@ -199,16 +248,50 @@ exportBtn.onclick = () => {
   a.click();
 };
 
+importBtn.onclick = () => fileInput.click();
+
+fileInput.onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const text = ev.target.result;
+    const lines = text.split('\n');
+    const newRecords = [];
+    // 첫 번째 줄(헤더) 제외하고 분석
+    for(let i=1; i<lines.length; i++) {
+      const cols = lines[i].split(',');
+      if (cols.length >= 3) {
+        newRecords.push({
+          date: cols[0].replace('\ufeff', '').trim(),
+          sys: parseInt(cols[1]),
+          dia: parseInt(cols[2]),
+          note: cols[3] ? cols[3].trim() : ""
+        });
+      }
+    }
+    if(confirm(`${newRecords.length}개의 데이터를 불러오시겠습니까? (기존 데이터와 합쳐집니다)`)) {
+      records = [...records, ...newRecords];
+      persist();
+    }
+    fileInput.value = ''; // 초기화
+  };
+  reader.readAsText(file);
+};
+
 function persist(){ 
-  records.sort((a,b) => new Date(b.date) - new Date(a.date));
+  // 중복 제거 및 날짜순 정렬
+  const unique = Array.from(new Set(records.map(r => JSON.stringify(r)))).map(s => JSON.parse(s));
+  records = unique.sort((a,b) => new Date(b.date) - new Date(a.date));
   localStorage.setItem('bp', JSON.stringify(records)); 
   render(); 
 }
 
+// 2. 혈압 상태 가이드 로직
 function level(r){
-  if(r.sys>=SYS_LIMIT||r.dia>=DIA_LIMIT) return 'high';
-  if(r.sys>=130||r.dia>=85) return 'warn';
-  return 'normal';
+  if(r.sys>=SYS_LIMIT||r.dia>=DIA_LIMIT) return 'dot-high';
+  if(r.sys>=130||r.dia>=85) return 'dot-warn';
+  return 'dot-normal';
 }
 
 function render(){
@@ -216,18 +299,25 @@ function render(){
   listEl.innerHTML='';
   records.forEach((r, i) => {
     const row = document.createElement('div');
-    row.className = `record ${level(r)}`;
-    const textSpan = document.createElement('span');
-    textSpan.className = 'record-text';
-    textSpan.innerHTML = `<strong>${r.date.substring(5)}</strong> | ${r.sys}/${r.dia} <small style="color:#94a3b8">${r.note?'('+r.note+')':''}</small>`;
-    row.appendChild(textSpan);
+    row.className = `record`;
+    
+    // 상태 도트와 텍스트 결합
+    row.innerHTML = `
+      <div class="record-info">
+        <span class="status-dot ${level(r)}"></span>
+        <div class="record-text">
+          <strong>${r.date.substring(5)}</strong> | ${r.sys}/${r.dia} 
+          <small style="color:#94a3b8">${r.note?'('+r.note+')':''}</small>
+        </div>
+      </div>
+    `;
 
     if(editMode){
       const chk = document.createElement('input');
       chk.type = 'checkbox';
       chk.onclick = (e) => {
         setTimeout(() => {
-          if(confirm('정말 삭제하시겠습니까?')){
+          if(confirm('이 기록을 삭제하시겠습니까?')){
             records.splice(i, 1);
             persist();
           } else { e.target.checked = false; }
@@ -240,36 +330,28 @@ function render(){
   updateSummary();
 }
 
+// 1. 최근 30일 평균 계산 기능
 function updateSummary() {
-  const summaryEl = document.getElementById('summary');
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const recentCount = records.filter(r => new Date(r.date) >= thirtyDaysAgo).length;
-  summaryEl.innerHTML = `총 기록: <b>${records.length}</b>건 | 최근 30일: <b>${recentCount}</b>건`;
+  
+  const recentRecords = records.filter(r => new Date(r.date) >= thirtyDaysAgo);
+  
+  let avgSys = 0, avgDia = 0;
+  if(recentRecords.length > 0) {
+    avgSys = Math.round(recentRecords.reduce((s, r) => s + r.sys, 0) / recentRecords.length);
+    avgDia = Math.round(recentRecords.reduce((s, r) => s + r.dia, 0) / recentRecords.length);
+  }
+
+  document.getElementById('avgVal').innerText = `${avgSys} / ${avgDia}`;
+  document.getElementById('totalCount').innerText = `${records.length}건`;
 }
 
 function renderChart() {
   if (chart) chart.destroy();
   const ctx = document.getElementById('chart').getContext('2d');
-  const chartRecords = [...records].slice(0, 10).reverse();
+  const chartRecords = [...records].slice(0, 15).reverse(); // 최근 15개 표시
   chart = new Chart(ctx, {
     type:'line',
     data:{
-      labels: chartRecords.map(r=>r.date.substring(5)),
-      datasets:[
-        { label:'최고', data:chartRecords.map(r=>r.sys), borderColor:'#ef4444', backgroundColor:'#ef4444', tension:0.3 },
-        { label:'최저', data:chartRecords.map(r=>r.dia), borderColor:'#3b82f6', backgroundColor:'#3b82f6', tension:0.3 }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: false } }
-    }
-  });
-}
-persist();
-</script>
-</body>
-</html>
+      labels: chartRecords.map(r=>r.date.substring
