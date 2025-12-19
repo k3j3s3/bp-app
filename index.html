@@ -16,15 +16,17 @@
     .btn-list { background:#2563eb; color:white; border:none; border-radius:8px; }
     .btn-chart { background:#16a34a; color:white; border:none; border-radius:8px; }
     .btn-export { background:#7c3aed; color:white; border:none; border-radius:8px; }
-    .btn-del { background:#9ca3af; color:white; border:none; border-radius:6px; padding:4px 8px; margin-left:8px; width: Auto;}
-}
+    .btn-edit { background:#374151; color:white; border:none; border-radius:8px; }
 
     .high { color:#dc2626; font-weight:bold; }
 
     .view-toggle { display:flex; gap:8px; margin-bottom:10px; }
     .view-toggle button { flex:1; }
 
-    .row { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+    .row { padding:6px; border-bottom:1px solid #e5e7eb; }
+    .row.selectable { cursor:pointer; }
+    .row.selected { background:#fee2e2; }
+    .edit-hint { color:#dc2626; font-size:13px; margin-bottom:6px; }
   </style>
 </head>
 <body>
@@ -49,11 +51,13 @@
 </div>
 
 <div class="card" id="listView">
+  <div id="editHint" class="edit-hint" style="display:none;">삭제할 데이터를 선택하세요</div>
   <div id="list"></div>
 </div>
 
 <div class="card">
   <button class="btn-export" onclick="exportCSV()">엑셀(CSV) 내보내기</button>
+  <button class="btn-edit" onclick="toggleEdit()">편집</button>
 </div>
 
 <script>
@@ -67,10 +71,12 @@ const diaInput = document.getElementById('dia');
 const noteInput = document.getElementById('note');
 const listEl = document.getElementById('list');
 const chartCanvas = document.getElementById('chart');
+const editHint = document.getElementById('editHint');
 
 const SYS_LIMIT = 140, DIA_LIMIT = 90;
 let records = JSON.parse(localStorage.getItem('bp') || '[]');
 let chart;
+let editMode = false;
 
 function save(){
   localStorage.setItem('bp', JSON.stringify(records));
@@ -95,10 +101,10 @@ function add(){
   save();
 }
 
-function removeRecord(index){
-  if(!confirm('이 기록을 삭제할까요?')) return;
-  records.splice(index, 1);
-  save();
+function toggleEdit(){
+  editMode = !editMode;
+  editHint.style.display = editMode ? 'block' : 'none';
+  render();
 }
 
 function render(){
@@ -106,19 +112,21 @@ function render(){
 
   records.forEach((r, index)=>{
     const row = document.createElement('div');
-    row.className = 'row';
+    row.className = 'row' + (editMode ? ' selectable' : '');
 
-    const text = document.createElement('span');
-    if(r.sys >= SYS_LIMIT || r.dia >= DIA_LIMIT) text.className = 'high';
-    text.textContent = `${r.date}  ${r.sys}/${r.dia} ${r.note||''}`;
+    if(r.sys >= SYS_LIMIT || r.dia >= DIA_LIMIT) row.classList.add('high');
 
-    const delBtn = document.createElement('button');
-    delBtn.className = 'btn-del';
-    delBtn.textContent = '삭제';
-    delBtn.onclick = () => removeRecord(index);
+    row.textContent = `${r.date}  ${r.sys}/${r.dia} ${r.note||''}`;
 
-    row.appendChild(text);
-    row.appendChild(delBtn);
+    if(editMode){
+      row.onclick = () => {
+        if(confirm('이 데이터를 삭제할까요?')){
+          records.splice(index,1);
+          save();
+        }
+      };
+    }
+
     listEl.appendChild(row);
   });
 
