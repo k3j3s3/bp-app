@@ -14,7 +14,6 @@ body {
   background:#f3f4f6;
 }
 
-/* 우측 상단 앱 표시 */
 .app-badge {
   position: fixed;
   top: 10px;
@@ -22,12 +21,9 @@ body {
   font-size: 11px;
   color: #6b7280;
   font-weight: 600;
-  letter-spacing: 0.5px;
   z-index: 999;
-  opacity: 0.85;
 }
 
-/* 공통 */
 .container { padding:16px; }
 
 .card {
@@ -52,7 +48,6 @@ button {
   font-weight:600;
 }
 
-/* 버튼 색상 */
 .btn-save { background:#ef4444; }
 .btn-list { background:#3b82f6; }
 .btn-chart { background:#8b5cf6; }
@@ -67,16 +62,22 @@ button {
 .view-toggle button { flex:1; }
 
 .high { color:#dc2626; font-weight:700; }
+.warn { color:#f59e0b; font-weight:700; }
+.normal { color:#16a34a; }
+
+#listWrapper {
+  max-height: 260px;
+  overflow-y: auto;
+}
 
 .record {
   display:flex;
+  justify-content:space-between;
   align-items:center;
-  gap:6px;
+  padding:6px 0;
+  border-bottom:1px solid #e5e7eb;
   font-size:14px;
-  padding:4px 0;
 }
-
-.record span { flex:1; }
 
 .edit-hint {
   font-size:13px;
@@ -84,101 +85,60 @@ button {
   margin-bottom:6px;
   font-weight:700;
 }
-
-/* 리스트 스크롤 */
-#listWrapper {
-  max-height: 260px;   /* 약 5개 */
-  overflow-y: auto;
-}
-#list {
-  padding-right: 4px;
-}
 </style>
 </head>
 
 <body>
-
 <div class="app-badge">野郞 BP APP</div>
 
 <div class="container">
 
-  <!-- 입력 -->
-  <div class="card">
-    <input type="date" id="date">
-    <input id="sys" placeholder="최고혈압" type="number">
-    <input id="dia" placeholder="최저혈압" type="number">
-    <input id="note" placeholder="비고">
-    <button class="btn-save" id="saveBtn">저장</button>
-  </div>
+<div class="card">
+  <input type="date" id="date">
+  <input id="sys" placeholder="최고혈압" type="number">
+  <input id="dia" placeholder="최저혈압" type="number">
+  <input id="note" placeholder="비고">
+  <button class="btn-save" id="saveBtn">저장</button>
+</div>
 
-  <!-- 보기 전환 -->
-  <div class="view-toggle">
-    <button class="btn-list" id="listBtn">리스트 보기</button>
-    <button class="btn-chart" id="chartBtn">그래프 보기</button>
-  </div>
+<div class="view-toggle">
+  <button class="btn-list" id="listBtn">리스트</button>
+  <button class="btn-chart" id="chartBtn">그래프</button>
+</div>
 
-  <!-- 그래프 -->
-  <div class="card" id="chartView" style="display:none;">
-    <canvas id="chart"></canvas>
-  </div>
+<div class="card" id="summary"></div>
 
-  <!-- 리스트 -->
-  <div class="card" id="listView">
-    <div id="editHint" class="edit-hint" style="display:none;">
-      삭제할 데이터를 선택하세요
-    </div>
+<div class="card" id="chartView" style="display:none;">
+  <canvas id="chart"></canvas>
+</div>
 
-    <div id="listWrapper">
-      <div id="list"></div>
-    </div>
-  </div>
+<div class="card" id="listView">
+  <div id="editHint" class="edit-hint" style="display:none;">삭제할 데이터를 선택하세요</div>
+  <div id="listWrapper"><div id="list"></div></div>
+</div>
 
-  <!-- 하단 버튼 -->
-  <div class="card">
-    <button class="btn-edit" id="editBtn">편집</button>
-    <button class="btn-export" id="exportBtn">엑셀(CSV) 내보내기</button>
-  </div>
+<div class="card">
+  <button class="btn-edit" id="editBtn">편집</button>
+  <button class="btn-export" id="exportBtn">CSV 내보내기</button>
+</div>
 
 </div>
 
 <script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
-}
-
 const SYS_LIMIT = 140, DIA_LIMIT = 90;
 let records = JSON.parse(localStorage.getItem('bp') || '[]');
-let chart = null;
 let editMode = false;
-
-const saveData = () =>
-  localStorage.setItem('bp', JSON.stringify(records));
+let chart;
 
 saveBtn.onclick = () => {
   if (!date.value || !sys.value || !dia.value) return;
-
-  records.push({
-    date: date.value,
-    sys: +sys.value,
-    dia: +dia.value,
-    note: note.value
-  });
-
+  records.push({ date:date.value, sys:+sys.value, dia:+dia.value, note:note.value });
   date.value = sys.value = dia.value = note.value = '';
-  saveData();
-  render();
+  persist();
 };
 
-listBtn.onclick = () => {
-  listView.style.display = 'block';
-  chartView.style.display = 'none';
-};
-
-chartBtn.onclick = () => {
-  listView.style.display = 'none';
-  chartView.style.display = 'block';
-  chart?.update();
-};
+listBtn.onclick = () => { listView.style.display='block'; chartView.style.display='none'; };
+chartBtn.onclick = () => { listView.style.display='none'; chartView.style.display='block'; chart?.update(); };
 
 editBtn.onclick = () => {
   editMode = !editMode;
@@ -187,53 +147,59 @@ editBtn.onclick = () => {
 };
 
 exportBtn.onclick = () => {
-  let csv = '날짜,최고혈압,최저혈압,비고\n';
-  records.forEach(r =>
-    csv += `${r.date},${r.sys},${r.dia},${r.note||''}\n`
-  );
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv]));
-  a.download = 'blood_pressure.csv';
+  let csv='날짜,최고혈압,최저혈압,비고\n';
+  records.forEach(r=>csv+=`${r.date},${r.sys},${r.dia},${r.note||''}\n`);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv]));
+  a.download='blood_pressure.csv';
   a.click();
 };
 
-function render() {
-  list.innerHTML = '';
+function persist(){ localStorage.setItem('bp',JSON.stringify(records)); render(); }
 
-  records.forEach((r, i) => {
-    const row = document.createElement('div');
-    row.className = 'record' +
-      ((r.sys >= SYS_LIMIT || r.dia >= DIA_LIMIT) ? ' high' : '');
+function level(r){
+  if(r.sys>=SYS_LIMIT||r.dia>=DIA_LIMIT) return 'high';
+  if(r.sys>=130||r.dia>=85) return 'warn';
+  return 'normal';
+}
 
-    if (editMode) {
-      const chk = document.createElement('input');
-      chk.type = 'checkbox';
-      chk.onchange = () => {
-        if (confirm('삭제 할까요?')) {
-          records.splice(i, 1);
-          saveData();
-          render();
+function render(){
+  list.innerHTML='';
+
+  records.forEach((r,i)=>{
+    const row=document.createElement('div');
+    row.className=`record ${level(r)}`;
+
+    const text=document.createElement('span');
+    text.textContent=`${r.date} ${r.sys}/${r.dia} ${r.note||''}`;
+
+    if(editMode){
+      const chk=document.createElement('input');
+      chk.type='checkbox';
+      chk.onchange=()=>{
+        if(confirm('삭제 할까요?')){
+          records.splice(i,1); persist();
         }
       };
+      row.appendChild(text);
       row.appendChild(chk);
+    } else {
+      row.appendChild(text);
     }
-
-    const span = document.createElement('span');
-    span.textContent = `${r.date}  ${r.sys}/${r.dia} ${r.note||''}`;
-    row.appendChild(span);
 
     list.appendChild(row);
   });
 
+  summary.innerHTML = `총 ${records.length}건 · 최근 7일 ${records.filter(r=>new Date(r.date)>=new Date(Date.now()-7*864e5)).length}건`;
+
   chart?.destroy();
-  const ctx = document.getElementById('chart');
-  chart = new Chart(ctx, {
+  chart = new Chart(document.getElementById('chart'),{
     type:'line',
     data:{
-      labels: records.map(r => r.date),
+      labels:records.map(r=>r.date),
       datasets:[
-        { label:'최고혈압', data: records.map(r => r.sys) },
-        { label:'최저혈압', data: records.map(r => r.dia) }
+        {label:'최고혈압',data:records.map(r=>r.sys)},
+        {label:'최저혈압',data:records.map(r=>r.dia)}
       ]
     }
   });
@@ -241,6 +207,6 @@ function render() {
 
 render();
 </script>
-
 </body>
 </html>
+
