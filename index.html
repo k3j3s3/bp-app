@@ -14,25 +14,20 @@ body {
   background:#f3f4f6;
 }
 
-/* ===== 상단 앱바 ===== */
-.appbar {
-  background:#1e3a8a;
-  color:#fff;
-  padding:14px 16px;
-  box-shadow:0 2px 6px rgba(0,0,0,.25);
+/* 우측 상단 앱 표시 */
+.app-badge {
+  position: fixed;
+  top: 10px;
+  right: 12px;
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  z-index: 999;
+  opacity: 0.85;
 }
 
-.appbar-title {
-  font-size:18px;
-  font-weight:700;
-}
-
-.appbar-sub {
-  font-size:12px;
-  opacity:.85;
-}
-
-/* ===== 공통 ===== */
+/* 공통 */
 .container { padding:16px; }
 
 .card {
@@ -78,7 +73,7 @@ button {
   align-items:center;
   gap:6px;
   font-size:14px;
-  margin-bottom:4px;
+  padding:4px 0;
 }
 
 .record span { flex:1; }
@@ -90,43 +85,24 @@ button {
   font-weight:700;
 }
 
-  .app-badge {
-  position: fixed;
-  top: 10px;
-  right: 12px;
-  font-size: 11px;
-  color: #6b7280;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  z-index: 999;
-  opacity: 0.85;
-}
-
-  #list {
-  max-height: 250px;   /* 약 5개 항목 */
-  padding-right: 4px;
-  overflow-y: auto;
-}
-
-  #listWrapper {
+/* 리스트 스크롤 */
+#listWrapper {
   max-height: 260px;   /* 약 5개 */
   overflow-y: auto;
 }
-
-
+#list {
+  padding-right: 4px;
+}
 </style>
 </head>
 
 <body>
+
 <div class="app-badge">野郞 BP APP</div>
-<!-- 상단 앱바 -->
-<div class="appbar">
-  <div class="appbar-title">野郞 BP APP</div>
-  <div class="appbar-sub">Blood Pressure Record</div>
-</div>
 
 <div class="container">
 
+  <!-- 입력 -->
   <div class="card">
     <input type="date" id="date">
     <input id="sys" placeholder="최고혈압" type="number">
@@ -135,23 +111,29 @@ button {
     <button class="btn-save" id="saveBtn">저장</button>
   </div>
 
+  <!-- 보기 전환 -->
   <div class="view-toggle">
     <button class="btn-list" id="listBtn">리스트 보기</button>
     <button class="btn-chart" id="chartBtn">그래프 보기</button>
   </div>
 
+  <!-- 그래프 -->
   <div class="card" id="chartView" style="display:none;">
     <canvas id="chart"></canvas>
   </div>
 
+  <!-- 리스트 -->
   <div class="card" id="listView">
     <div id="editHint" class="edit-hint" style="display:none;">
       삭제할 데이터를 선택하세요
     </div>
+
     <div id="listWrapper">
-    <div id="list"></div>
+      <div id="list"></div>
+    </div>
   </div>
 
+  <!-- 하단 버튼 -->
   <div class="card">
     <button class="btn-edit" id="editBtn">편집</button>
     <button class="btn-export" id="exportBtn">엑셀(CSV) 내보내기</button>
@@ -166,27 +148,35 @@ if ('serviceWorker' in navigator) {
 
 const SYS_LIMIT = 140, DIA_LIMIT = 90;
 let records = JSON.parse(localStorage.getItem('bp') || '[]');
-let chart;
+let chart = null;
 let editMode = false;
 
-const saveData = () => localStorage.setItem('bp', JSON.stringify(records));
+const saveData = () =>
+  localStorage.setItem('bp', JSON.stringify(records));
 
 saveBtn.onclick = () => {
   if (!date.value || !sys.value || !dia.value) return;
-  records.push({ date:date.value, sys:+sys.value, dia:+dia.value, note:note.value });
+
+  records.push({
+    date: date.value,
+    sys: +sys.value,
+    dia: +dia.value,
+    note: note.value
+  });
+
   date.value = sys.value = dia.value = note.value = '';
   saveData();
   render();
 };
 
 listBtn.onclick = () => {
-  listView.style.display='block';
-  chartView.style.display='none';
+  listView.style.display = 'block';
+  chartView.style.display = 'none';
 };
 
 chartBtn.onclick = () => {
-  listView.style.display='none';
-  chartView.style.display='block';
+  listView.style.display = 'none';
+  chartView.style.display = 'block';
   chart?.update();
 };
 
@@ -198,38 +188,52 @@ editBtn.onclick = () => {
 
 exportBtn.onclick = () => {
   let csv = '날짜,최고혈압,최저혈압,비고\n';
-  records.forEach(r=>csv+=`${r.date},${r.sys},${r.dia},${r.note||''}\n`);
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([csv]));
-  a.download='blood_pressure.csv';
+  records.forEach(r =>
+    csv += `${r.date},${r.sys},${r.dia},${r.note||''}\n`
+  );
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv]));
+  a.download = 'blood_pressure.csv';
   a.click();
 };
 
 function render() {
-  list.innerHTML='';
-  records.forEach((r,i)=>{
-    const row=document.createElement('div');
-    row.className='record'+((r.sys>=SYS_LIMIT||r.dia>=DIA_LIMIT)?' high':'');
-    if(editMode){
-      const c=document.createElement('input');
-      c.type='checkbox';
-      c.onchange=()=>confirm('삭제 할까요?')&&(records.splice(i,1),saveData(),render());
-      row.appendChild(c);
+  list.innerHTML = '';
+
+  records.forEach((r, i) => {
+    const row = document.createElement('div');
+    row.className = 'record' +
+      ((r.sys >= SYS_LIMIT || r.dia >= DIA_LIMIT) ? ' high' : '');
+
+    if (editMode) {
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.onchange = () => {
+        if (confirm('삭제 할까요?')) {
+          records.splice(i, 1);
+          saveData();
+          render();
+        }
+      };
+      row.appendChild(chk);
     }
-    const s=document.createElement('span');
-    s.textContent=`${r.date}  ${r.sys}/${r.dia} ${r.note||''}`;
-    row.appendChild(s);
+
+    const span = document.createElement('span');
+    span.textContent = `${r.date}  ${r.sys}/${r.dia} ${r.note||''}`;
+    row.appendChild(span);
+
     list.appendChild(row);
   });
 
   chart?.destroy();
-  chart=new Chart(chart,{
+  const ctx = document.getElementById('chart');
+  chart = new Chart(ctx, {
     type:'line',
     data:{
-      labels:records.map(r=>r.date),
+      labels: records.map(r => r.date),
       datasets:[
-        {label:'최고혈압',data:records.map(r=>r.sys)},
-        {label:'최저혈압',data:records.map(r=>r.dia)}
+        { label:'최고혈압', data: records.map(r => r.sys) },
+        { label:'최저혈압', data: records.map(r => r.dia) }
       ]
     }
   });
@@ -237,5 +241,6 @@ function render() {
 
 render();
 </script>
+
 </body>
 </html>
