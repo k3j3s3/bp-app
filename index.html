@@ -100,8 +100,32 @@ function add(){
 function render(){
   listEl.innerHTML = '';
 
-  records.forEach(r=>{
-    const d = document.createElement('div');
+records.forEach((r, index)=>{
+  const row = document.createElement('div');
+  row.style.display = 'flex';
+  row.style.justifyContent = 'space-between';
+  row.style.alignItems = 'center';
+  row.style.marginBottom = '6px';
+
+  const text = document.createElement('span');
+  if(r.sys >= SYS_LIMIT || r.dia >= DIA_LIMIT) text.className = 'high';
+  text.textContent = `${r.date}  ${r.sys}/${r.dia} ${r.note||''}`;
+
+  const delBtn = document.createElement('button');
+  delBtn.textContent = '삭제';
+  delBtn.style.background = '#9ca3af';
+  delBtn.style.color = 'white';
+  delBtn.style.border = 'none';
+  delBtn.style.borderRadius = '6px';
+  delBtn.style.padding = '4px 8px';
+
+  delBtn.onclick = () => removeRecord(index);
+
+  row.appendChild(text);
+  row.appendChild(delBtn);
+  listEl.appendChild(row);
+});
+
     if(r.sys >= SYS_LIMIT || r.dia >= DIA_LIMIT) d.className = 'high';
     d.textContent = `${r.date}  ${r.sys}/${r.dia} ${r.note||''}`;
     listEl.appendChild(d);
