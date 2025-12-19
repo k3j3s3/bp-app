@@ -307,4 +307,18 @@ function renderChart() {
       labels: chartRecords.map(r=>r.date.substring(5)),
       datasets:[
         { label:'최고', data:chartRecords.map(r=>r.sys), borderColor:'#ef4444', backgroundColor:'#ef4444', tension:0.3 },
-        { label:'최저', data:chartRecords.map(r=>r.dia
+        { label:'최저', data:chartRecords.map(r=>r.dia), borderColor:'#3b82f6', backgroundColor:'#3b82f6', tension:0.3 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: false } }
+    }
+  });
+}
+persist();
+</script>
+</body>
+</html>
