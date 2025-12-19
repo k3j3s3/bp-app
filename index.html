@@ -12,21 +12,18 @@
     .card { background:white; padding:12px; border-radius:12px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,.06); }
     input, button { width:100%; padding:8px; margin-top:6px; }
 
-    /* 버튼 색상 구분 */
     .btn-save { background:#ef4444; color:white; border:none; border-radius:8px; }
     .btn-list { background:#2563eb; color:white; border:none; border-radius:8px; }
     .btn-chart { background:#16a34a; color:white; border:none; border-radius:8px; }
     .btn-export { background:#7c3aed; color:white; border:none; border-radius:8px; }
+    .btn-del { background:#9ca3af; color:white; border:none; border-radius:6px; padding:4px 8px; margin-left:8px; }
 
     .high { color:#dc2626; font-weight:bold; }
 
-    .view-toggle {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-
+    .view-toggle { display:flex; gap:8px; margin-bottom:10px; }
     .view-toggle button { flex:1; }
+
+    .row { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
   </style>
 </head>
 <body>
@@ -97,38 +94,31 @@ function add(){
   save();
 }
 
+function removeRecord(index){
+  if(!confirm('이 기록을 삭제할까요?')) return;
+  records.splice(index, 1);
+  save();
+}
+
 function render(){
   listEl.innerHTML = '';
 
-records.forEach((r, index)=>{
-  const row = document.createElement('div');
-  row.style.display = 'flex';
-  row.style.justifyContent = 'space-between';
-  row.style.alignItems = 'center';
-  row.style.marginBottom = '6px';
+  records.forEach((r, index)=>{
+    const row = document.createElement('div');
+    row.className = 'row';
 
-  const text = document.createElement('span');
-  if(r.sys >= SYS_LIMIT || r.dia >= DIA_LIMIT) text.className = 'high';
-  text.textContent = `${r.date}  ${r.sys}/${r.dia} ${r.note||''}`;
+    const text = document.createElement('span');
+    if(r.sys >= SYS_LIMIT || r.dia >= DIA_LIMIT) text.className = 'high';
+    text.textContent = `${r.date}  ${r.sys}/${r.dia} ${r.note||''}`;
 
-  const delBtn = document.createElement('button');
-  delBtn.textContent = '삭제';
-  delBtn.style.background = '#9ca3af';
-  delBtn.style.color = 'white';
-  delBtn.style.border = 'none';
-  delBtn.style.borderRadius = '6px';
-  delBtn.style.padding = '4px 8px';
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn-del';
+    delBtn.textContent = '삭제';
+    delBtn.onclick = () => removeRecord(index);
 
-  delBtn.onclick = () => removeRecord(index);
-
-  row.appendChild(text);
-  row.appendChild(delBtn);
-  listEl.appendChild(row);
-});
-
-    if(r.sys >= SYS_LIMIT || r.dia >= DIA_LIMIT) d.className = 'high';
-    d.textContent = `${r.date}  ${r.sys}/${r.dia} ${r.note||''}`;
-    listEl.appendChild(d);
+    row.appendChild(text);
+    row.appendChild(delBtn);
+    listEl.appendChild(row);
   });
 
   if(chart) chart.destroy();
@@ -163,12 +153,6 @@ function exportCSV(){
   a.href=URL.createObjectURL(new Blob([csv]));
   a.download='blood_pressure.csv';
   a.click();
-}
-
-  function removeRecord(index){
-  if(!confirm('이 기록을 삭제할까요?')) return;
-  records.splice(index, 1);
-  save();
 }
 
 render();
