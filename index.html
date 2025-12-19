@@ -7,6 +7,17 @@
   <link rel="manifest" href="manifest.json">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+
+    function add(){
+  if(!dateInput.value || !sysInput.value || !diaInput.value) return;
+
+  records.push({
+    date: dateInput.value,
+    sys: +sysInput.value,
+    dia: +diaInput.value,
+    note: noteInput.value
+  });
+    
     body { font-family: system-ui, sans-serif; background:#f3f4f6; padding:16px; }
     h1 { font-size:20px; margin-bottom:12px; }
     .card { background:white; padding:12px; border-radius:12px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,.06); }
