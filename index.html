@@ -7,42 +7,30 @@
   <link rel="manifest" href="manifest.json">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-
-    function add(){
-  if(!dateInput.value || !sysInput.value || !diaInput.value) return;
-
-  records.push({
-    date: dateInput.value,
-    sys: +sysInput.value,
-    dia: +diaInput.value,
-    note: noteInput.value
-  });
-    
     body { font-family: system-ui, sans-serif; background:#f3f4f6; padding:16px; }
     h1 { font-size:20px; margin-bottom:12px; }
     .card { background:white; padding:12px; border-radius:12px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,.06); }
     input, button { width:100%; padding:8px; margin-top:6px; }
-    button { background:#ef4444; color:white; border:none; border-radius:8px; }
+
+    /* 버튼 색상 구분 */
+    .btn-save { background:#ef4444; color:white; border:none; border-radius:8px; }
+    .btn-list { background:#2563eb; color:white; border:none; border-radius:8px; }
+    .btn-chart { background:#16a34a; color:white; border:none; border-radius:8px; }
+    .btn-export { background:#7c3aed; color:white; border:none; border-radius:8px; }
+
     .high { color:#dc2626; font-weight:bold; }
+
     .view-toggle {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
-}
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
 
-.view-toggle button {
-  flex: 1;
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 8px;
-  font-weight: bold;
-}
-
+    .view-toggle button { flex:1; }
   </style>
 </head>
 <body>
+
 <h1>혈압 관리</h1>
 
 <div class="card">
@@ -50,15 +38,14 @@
   <input id="sys" placeholder="최고혈압">
   <input id="dia" placeholder="최저혈압">
   <input id="note" placeholder="비고">
-  <button onclick="add()">저장</button>
+  <button class="btn-save" onclick="add()">저장</button>
 </div>
 
-  <div class="view-toggle">
-  <button onclick="showList()">리스트 보기</button>
-  <button onclick="showChart()">그래프 보기</button>
+<div class="view-toggle">
+  <button class="btn-list" onclick="showList()">리스트 보기</button>
+  <button class="btn-chart" onclick="showChart()">그래프 보기</button>
 </div>
 
-  
 <div class="card" id="chartView" style="display:none;">
   <canvas id="chart"></canvas>
 </div>
@@ -68,7 +55,7 @@
 </div>
 
 <div class="card">
-  <button onclick="exportCSV()">엑셀(CSV) 내보내기</button>
+  <button class="btn-export" onclick="exportCSV()">엑셀(CSV) 내보내기</button>
 </div>
 
 <script>
@@ -76,37 +63,75 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
 
+const dateInput = document.getElementById('date');
+const sysInput = document.getElementById('sys');
+const diaInput = document.getElementById('dia');
+const noteInput = document.getElementById('note');
+const listEl = document.getElementById('list');
+const chartCanvas = document.getElementById('chart');
+
 const SYS_LIMIT = 140, DIA_LIMIT = 90;
 let records = JSON.parse(localStorage.getItem('bp') || '[]');
 let chart;
 
-function save(){ localStorage.setItem('bp', JSON.stringify(records)); render(); }
+function save(){
+  localStorage.setItem('bp', JSON.stringify(records));
+  render();
+}
 
 function add(){
-  if(!date.value||!sys.value||!dia.value) return;
-  records.push({date:date.value, sys:+sys.value, dia:+dia.value, note:note.value});
-  date.value=sys.value=dia.value=note.value='';
+  if(!dateInput.value || !sysInput.value || !diaInput.value) return;
+
+  records.push({
+    date: dateInput.value,
+    sys: +sysInput.value,
+    dia: +diaInput.value,
+    note: noteInput.value
+  });
+
+  dateInput.value = '';
+  sysInput.value = '';
+  diaInput.value = '';
+  noteInput.value = '';
+
   save();
 }
 
 function render(){
-  list.innerHTML='';
+  listEl.innerHTML = '';
+
   records.forEach(r=>{
-    const d=document.createElement('div');
-    if(r.sys>=SYS_LIMIT||r.dia>=DIA_LIMIT) d.className='high';
-    d.textContent=`${r.date}  ${r.sys}/${r.dia} ${r.note||''}`;
-    list.appendChild(d);
+    const d = document.createElement('div');
+    if(r.sys >= SYS_LIMIT || r.dia >= DIA_LIMIT) d.className = 'high';
+    d.textContent = `${r.date}  ${r.sys}/${r.dia} ${r.note||''}`;
+    listEl.appendChild(d);
   });
+
   if(chart) chart.destroy();
-  chart=new Chart(document.getElementById('chart'),{
+
+  chart = new Chart(chartCanvas,{
     type:'line',
-    data:{labels:records.map(r=>r.date),
+    data:{
+      labels: records.map(r=>r.date),
       datasets:[
-        {label:'최고혈압',data:records.map(r=>r.sys)},
-        {label:'최저혈압',data:records.map(r=>r.dia)}
-      ]}
+        {label:'최고혈압', data: records.map(r=>r.sys)},
+        {label:'최저혈압', data: records.map(r=>r.dia)}
+      ]
+    }
   });
 }
+
+function showList(){
+  document.getElementById('listView').style.display = 'block';
+  document.getElementById('chartView').style.display = 'none';
+}
+
+function showChart(){
+  document.getElementById('listView').style.display = 'none';
+  document.getElementById('chartView').style.display = 'block';
+  setTimeout(()=>{ if(chart) chart.update(); },50);
+}
+
 function exportCSV(){
   let csv='날짜,최고혈압,최저혈압,비고\n';
   records.forEach(r=>csv+=`${r.date},${r.sys},${r.dia},${r.note||''}\n`);
@@ -115,22 +140,10 @@ function exportCSV(){
   a.download='blood_pressure.csv';
   a.click();
 }
+
 render();
-  function showList() {
-  document.getElementById("listView").style.display = "block";
-  document.getElementById("chartView").style.display = "none";
-}
-
-function showChart() {
-  document.getElementById("listView").style.display = "none";
-  document.getElementById("chartView").style.display = "block";
-  setTimeout(() => {
-    if (chart) chart.update();
-  }, 50);
-}
-
-}
-
 </script>
+
 </body>
 </html>
+
