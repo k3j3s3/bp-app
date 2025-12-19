@@ -7,7 +7,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-/* 기본 테마 및 배경 */
 body {
   margin:0;
   font-family: 'Pretendard', system-ui, -apple-system, sans-serif;
@@ -15,7 +14,6 @@ body {
   color: #1e293b;
 }
 
-/* 1. 상단 헤더 */
 .header {
   background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
   color: white;
@@ -26,18 +24,8 @@ body {
   margin-bottom: 16px;
 }
 
-.header h1 {
-  margin: 0;
-  font-size: 19px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-}
-
-.header p {
-  margin: 2px 0 0;
-  font-size: 11px;
-  opacity: 0.85;
-}
+.header h1 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -0.5px; }
+.header p { margin: 2px 0 0; font-size: 11px; opacity: 0.85; }
 
 .container { padding: 0 16px 40px; }
 
@@ -59,13 +47,7 @@ input, button {
   box-sizing: border-box;
 }
 
-button {
-  border:none;
-  color:#fff;
-  font-weight:700;
-  cursor: pointer;
-  margin-top: 10px;
-}
+button { border:none; color:#fff; font-weight:700; cursor: pointer; margin-top: 10px; }
 
 .btn-save { background:#ef4444; margin-top: 14px; }
 .btn-list { background:#3b82f6; }
@@ -74,30 +56,15 @@ button {
 .btn-export { background:#64748b; flex: 1; }
 .btn-import { background:#94a3b8; flex: 1; }
 
-.view-toggle {
-  display:flex;
-  gap:10px;
-  margin-bottom:12px;
-}
+.view-toggle { display:flex; gap:10px; margin-bottom:12px; }
 .view-toggle button { flex:1; margin-top:0; }
 
-/* 2. 상태 가이드 (도트 디자인) */
-.status-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: inline-block;
-  margin-right: 8px;
-}
+.status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
 .dot-high { background: #ef4444; box-shadow: 0 0 5px #ef4444; }
 .dot-warn { background: #f59e0b; }
 .dot-normal { background: #10b981; }
 
-/* 리스트 높이 고정 및 스크롤 */
-#listWrapper {
-  max-height: 220px; 
-  overflow-y: auto;
-}
+#listWrapper { max-height: 250px; overflow-y: auto; }
 
 .record {
   display: flex !important;
@@ -112,36 +79,12 @@ button {
 .record-info { display: flex; align-items: center; flex: 1; }
 .record-text { text-align: left; }
 
-.record input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  margin-left: 12px;
-  accent-color: #ef4444;
-}
+.record input[type="checkbox"] { width: 20px; height: 20px; margin-left: 12px; accent-color: #ef4444; }
 
-.summary-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  font-size: 12px;
-  color: #64748b;
-  text-align: center;
-}
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px; color: #64748b; text-align: center; }
+.summary-val { font-size: 16px; font-weight: 800; color: #1e293b; display: block; }
 
-.summary-val {
-  font-size: 16px;
-  font-weight: 800;
-  color: #1e293b;
-  display: block;
-}
-
-.edit-hint {
-  font-size:13px;
-  color:#ef4444;
-  margin-bottom:8px;
-  font-weight:700;
-  text-align: center;
-}
+.edit-hint { font-size:13px; color:#ef4444; margin-bottom:8px; font-weight:700; text-align: center; }
 </style>
 </head>
 
@@ -161,7 +104,7 @@ button {
       <input id="dia" placeholder="최저(DIA)" type="number">
     </div>
     <input id="note" placeholder="메모 (선택사항)">
-    <button class="btn-save" id="saveBtn">오늘의 혈압 기록</button>
+    <button class="btn-save" id="saveBtn">저장</button>
   </div>
 
   <div class="view-toggle">
@@ -209,17 +152,27 @@ date.value = new Date().toISOString().substring(0, 10);
 
 saveBtn.onclick = () => {
   if (!date.value || !sys.value || !dia.value) {
-    alert("수치를 입력해주세요.");
+    alert("날짜와 수치를 모두 입력해주세요.");
     return;
   }
+  
+  // 데이터 추가
   records.push({ 
     date: date.value, 
     sys: parseInt(sys.value), 
     dia: parseInt(dia.value), 
     note: note.value 
   });
+  
+  // 입력창 초기화
   sys.value = dia.value = note.value = '';
+  
+  // 저장 및 렌더링
   persist();
+  
+  // 데이터 입력 후 자동으로 리스트 뷰로 전환하여 결과 확인
+  listView.style.display='block';
+  chartView.style.display='none';
 };
 
 listBtn.onclick = () => { listView.style.display='block'; chartView.style.display='none'; };
@@ -237,7 +190,6 @@ editBtn.onclick = () => {
   render();
 };
 
-// 3. CSV 내보내기 및 불러오기 기능
 exportBtn.onclick = () => {
   if(records.length === 0) return alert('내보낼 데이터가 없습니다.');
   let csv='\ufeff날짜,최고혈압,최저혈압,메모\n';
@@ -258,7 +210,6 @@ fileInput.onchange = (e) => {
     const text = ev.target.result;
     const lines = text.split('\n');
     const newRecords = [];
-    // 첫 번째 줄(헤더) 제외하고 분석
     for(let i=1; i<lines.length; i++) {
       const cols = lines[i].split(',');
       if (cols.length >= 3) {
@@ -270,24 +221,22 @@ fileInput.onchange = (e) => {
         });
       }
     }
-    if(confirm(`${newRecords.length}개의 데이터를 불러오시겠습니까? (기존 데이터와 합쳐집니다)`)) {
+    if(confirm(`${newRecords.length}개의 데이터를 불러오시겠습니까?`)) {
       records = [...records, ...newRecords];
       persist();
     }
-    fileInput.value = ''; // 초기화
+    fileInput.value = '';
   };
   reader.readAsText(file);
 };
 
 function persist(){ 
-  // 중복 제거 및 날짜순 정렬
-  const unique = Array.from(new Set(records.map(r => JSON.stringify(r)))).map(s => JSON.parse(s));
-  records = unique.sort((a,b) => new Date(b.date) - new Date(a.date));
+  // 날짜순 정렬 (최신순)
+  records.sort((a,b) => new Date(b.date) - new Date(a.date));
   localStorage.setItem('bp', JSON.stringify(records)); 
   render(); 
 }
 
-// 2. 혈압 상태 가이드 로직
 function level(r){
   if(r.sys>=SYS_LIMIT||r.dia>=DIA_LIMIT) return 'dot-high';
   if(r.sys>=130||r.dia>=85) return 'dot-warn';
@@ -297,16 +246,19 @@ function level(r){
 function render(){
   const listEl = document.getElementById('list');
   listEl.innerHTML='';
+  
+  if(records.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8; font-size:13px;">데이터가 없습니다.<br>새 기록을 추가해보세요.</div>';
+  }
+
   records.forEach((r, i) => {
     const row = document.createElement('div');
     row.className = `record`;
-    
-    // 상태 도트와 텍스트 결합
     row.innerHTML = `
       <div class="record-info">
         <span class="status-dot ${level(r)}"></span>
         <div class="record-text">
-          <strong>${r.date.substring(5)}</strong> | ${r.sys}/${r.dia} 
+          <strong>${r.date}</strong> | ${r.sys}/${r.dia} 
           <small style="color:#94a3b8">${r.note?'('+r.note+')':''}</small>
         </div>
       </div>
@@ -330,11 +282,9 @@ function render(){
   updateSummary();
 }
 
-// 1. 최근 30일 평균 계산 기능
 function updateSummary() {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  
   const recentRecords = records.filter(r => new Date(r.date) >= thirtyDaysAgo);
   
   let avgSys = 0, avgDia = 0;
@@ -350,8 +300,11 @@ function updateSummary() {
 function renderChart() {
   if (chart) chart.destroy();
   const ctx = document.getElementById('chart').getContext('2d');
-  const chartRecords = [...records].slice(0, 15).reverse(); // 최근 15개 표시
+  const chartRecords = [...records].slice(0, 15).reverse();
   chart = new Chart(ctx, {
     type:'line',
     data:{
-      labels: chartRecords.map(r=>r.date.substring
+      labels: chartRecords.map(r=>r.date.substring(5)),
+      datasets:[
+        { label:'최고', data:chartRecords.map(r=>r.sys), borderColor:'#ef4444', backgroundColor:'#ef4444', tension:0.3 },
+        { label:'최저', data:chartRecords.map(r=>r.dia
