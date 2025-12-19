@@ -3,100 +3,121 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>野郞 BP APP</title>
+<title>野郞 BPM APP</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+/* 기본 테마 및 배경 */
 body {
   margin:0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont;
-  background:#f3f4f6;
+  font-family: 'Pretendard', system-ui, -apple-system, sans-serif;
+  background:#f8fafc;
+  color: #1e293b;
 }
 
-.app-badge {
-  position: fixed;
-  top: 10px;
-  right: 12px;
-  font-size: 11px;
-  color: #6b7280;
-  font-weight: 600;
-  z-index: 999;
+/* 2. 상단 헤더 디자인 개선 */
+.header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  color: white;
+  padding: 24px 16px;
+  text-align: center;
+  border-radius: 0 0 24px 24px;
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
+  margin-bottom: 20px;
 }
 
-.container { padding:16px; }
+.header h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.header p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  opacity: 0.8;
+  font-weight: 400;
+}
+
+.container { padding: 0 16px 40px; }
 
 .card {
   background:#fff;
-  padding:12px;
-  border-radius:12px;
-  margin-bottom:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  padding:16px;
+  border-radius:16px;
+  margin-bottom:16px;
+  box-shadow:0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
 }
 
 input, button {
   width:100%;
-  padding:10px;
-  margin-top:6px;
+  padding:12px;
+  margin-top:8px;
   font-size:14px;
+  border-radius:10px;
+  border: 1px solid #e2e8f0;
   box-sizing: border-box;
+  transition: all 0.2s;
+}
+
+input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 button {
   border:none;
-  border-radius:8px;
   color:#fff;
-  font-weight:600;
+  font-weight:700;
   cursor: pointer;
+  margin-top: 12px;
 }
+
+button:active { transform: scale(0.98); }
 
 .btn-save { background:#ef4444; }
 .btn-list { background:#3b82f6; }
 .btn-chart { background:#8b5cf6; }
 .btn-edit { background:#10b981; }
-.btn-export { background:#6b7280; }
+.btn-export { background:#64748b; }
 
 .view-toggle {
   display:flex;
-  gap:8px;
-  margin-bottom:10px;
+  gap:10px;
+  margin-bottom:12px;
 }
-.view-toggle button { flex:1; }
+.view-toggle button { flex:1; margin-top:0; }
 
 .high { color:#dc2626; font-weight:700; }
 .warn { color:#f59e0b; font-weight:700; }
 .normal { color:#16a34a; }
 
-/* 1. 스크롤 기능 해결: 높이 강제 고정 및 스크롤 설정 */
+/* 1번 수정: 리스트 높이 고정 및 스크롤 */
 #listWrapper {
-  max-height: 190px; /* 38px(항목높이) * 5개 = 190px */
-  overflow-y: auto;  /* 데이터 많을 시 스크롤 발생 */
-  display: block;
-  border: 1px solid #f0f0f0;
-  border-radius: 4px;
+  max-height: 200px; 
+  overflow-y: auto;
+  border-top: 1px solid #f1f5f9;
 }
 
-/* 3. 리스트 왼쪽, 체크박스 오른쪽 정렬 */
 .record {
   display: flex !important;
   justify-content: space-between !important;
   align-items: center;
-  height: 38px; /* 한 항목당 높이 고정 */
+  height: 40px;
   padding: 0 8px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #f1f5f9;
   font-size: 14px;
-  box-sizing: border-box;
 }
 
-.record-text {
-  flex: 1;
-  text-align: left;
-}
+.record-text { flex: 1; text-align: left; }
 
 .record input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  margin-left: 10px;
-  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  margin-left: 12px;
+  accent-color: #ef4444; /* 체크박스 색상 변경 */
 }
 
 .edit-hint {
@@ -104,45 +125,52 @@ button {
   color:#ef4444;
   margin-bottom:8px;
   font-weight:700;
+  text-align: center;
 }
 </style>
 </head>
 
 <body>
-<div class="app-badge">野郞 BP APP</div>
+
+<div class="header">
+  <h1>野郞 BPM APP</h1>
+  <p>Blood Pressure Management System</p>
+</div>
 
 <div class="container">
 
-<div class="card">
-  <input type="date" id="date">
-  <input id="sys" placeholder="최고혈압" type="number">
-  <input id="dia" placeholder="최저혈압" type="number">
-  <input id="note" placeholder="비고">
-  <button class="btn-save" id="saveBtn">저장</button>
-</div>
-
-<div class="view-toggle">
-  <button class="btn-list" id="listBtn">리스트</button>
-  <button class="btn-chart" id="chartBtn">그래프</button>
-</div>
-
-<div class="card" id="summary" style="font-size:14px; text-align:center;"></div>
-
-<div class="card" id="chartView" style="display:none;">
-  <canvas id="chart" style="height:200px;"></canvas>
-</div>
-
-<div class="card" id="listView">
-  <div id="editHint" class="edit-hint" style="display:none;">삭제할 데이터를 선택하세요</div>
-  <div id="listWrapper">
-    <div id="list"></div>
+  <div class="card">
+    <input type="date" id="date">
+    <div style="display:flex; gap:8px;">
+      <input id="sys" placeholder="최고혈압" type="number">
+      <input id="dia" placeholder="최저혈압" type="number">
+    </div>
+    <input id="note" placeholder="메모 (선택사항)">
+    <button class="btn-save" id="saveBtn">오늘의 혈압 저장</button>
   </div>
-</div>
 
-<div class="card">
-  <button class="btn-edit" id="editBtn">편집 모드 ON/OFF</button>
-  <button class="btn-export" id="exportBtn">CSV 내보내기</button>
-</div>
+  <div class="view-toggle">
+    <button class="btn-list" id="listBtn">기록 보기</button>
+    <button class="btn-chart" id="chartBtn">변화 그래프</button>
+  </div>
+
+  <div class="card" id="summary" style="font-size:14px; text-align:center; color:#475569;"></div>
+
+  <div class="card" id="chartView" style="display:none;">
+    <canvas id="chart" style="height:220px;"></canvas>
+  </div>
+
+  <div class="card" id="listView">
+    <div id="editHint" class="edit-hint" style="display:none;">⚠️ 삭제할 항목의 체크박스를 선택하세요</div>
+    <div id="listWrapper">
+      <div id="list"></div>
+    </div>
+  </div>
+
+  <div class="card" style="background: transparent; box-shadow: none; padding: 0;">
+    <button class="btn-edit" id="editBtn">데이터 편집 모드</button>
+    <button class="btn-export" id="exportBtn">엑셀(CSV) 내보내기</button>
+  </div>
 
 </div>
 
@@ -152,11 +180,14 @@ let records = JSON.parse(localStorage.getItem('bp') || '[]');
 let editMode = false;
 let chart;
 
-// 오늘 날짜 자동 입력
+// 기본 날짜를 오늘로 설정
 date.value = new Date().toISOString().substring(0, 10);
 
 saveBtn.onclick = () => {
-  if (!date.value || !sys.value || !dia.value) return;
+  if (!date.value || !sys.value || !dia.value) {
+    alert("혈압 수치를 입력해주세요.");
+    return;
+  }
   records.push({ 
     date: date.value, 
     sys: parseInt(sys.value), 
@@ -176,22 +207,23 @@ chartBtn.onclick = () => {
 
 editBtn.onclick = () => {
   editMode = !editMode;
+  editBtn.innerText = editMode ? "편집 완료" : "데이터 편집 모드";
+  editBtn.style.background = editMode ? "#000" : "#10b981";
   editHint.style.display = editMode ? 'block' : 'none';
   render();
 };
 
 exportBtn.onclick = () => {
-  if(records.length === 0) return alert('내보낼 데이터가 없습니다.');
-  let csv='\ufeff날짜,최고혈압,최저혈압,비고\n';
+  if(records.length === 0) return alert('데이터가 없습니다.');
+  let csv='\ufeff날짜,최고혈압,최저혈압,메모\n';
   records.forEach(r=>csv+=`${r.date},${r.sys},${r.dia},${r.note||''}\n`);
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([csv], {type: 'text/csv;charset=utf-8;'}));
-  a.download='blood_pressure.csv';
+  a.download='MyBloodPressure.csv';
   a.click();
 };
 
 function persist(){ 
-  // 날짜순 정렬 (최신이 위로)
   records.sort((a,b) => new Date(b.date) - new Date(a.date));
   localStorage.setItem('bp', JSON.stringify(records)); 
   render(); 
@@ -207,76 +239,72 @@ function render(){
   const listEl = document.getElementById('list');
   listEl.innerHTML='';
 
-  // 1 & 3번 수정: 리스트 항목 생성 및 배치
   records.forEach((r, i) => {
     const row = document.createElement('div');
     row.className = `record ${level(r)}`;
 
     const textSpan = document.createElement('span');
     textSpan.className = 'record-text';
-    textSpan.textContent = `${r.date} | ${r.sys}/${r.dia} | ${r.note||''}`;
+    textSpan.innerHTML = `<strong>${r.date.substring(5)}</strong> | ${r.sys}/${r.dia} <small style="color:#94a3b8">${r.note?'('+r.note+')':''}</small>`;
     row.appendChild(textSpan);
 
     if(editMode){
       const chk = document.createElement('input');
       chk.type = 'checkbox';
+      // 1번 수정: 체크박스가 먼저 체크되게 한 후 알림창 띄우기
       chk.onclick = (e) => {
-        if(confirm('이 항목을 삭제하시겠습니까?')){
-          records.splice(i, 1);
-          persist();
-        } else {
-          e.target.checked = false;
-        }
+        setTimeout(() => {
+          if(confirm('이 항목을 정말 삭제하시겠습니까?')){
+            records.splice(i, 1);
+            persist();
+          } else {
+            e.target.checked = false;
+          }
+        }, 50); // 0.05초 지연으로 체크 표시 렌더링 시간 확보
       };
-      row.appendChild(chk); // 체크박스 오른쪽 배치
+      row.appendChild(chk);
     }
-
     listEl.appendChild(row);
   });
 
-  // 2번 수정: 요약 정보 계산 (최근 30일)
   updateSummary();
 }
 
 function updateSummary() {
   const summaryEl = document.getElementById('summary');
   const now = new Date();
-  // 30일 전의 자정(00:00:00) 시간 구하기
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(now.getDate() - 30);
   thirtyDaysAgo.setHours(0,0,0,0);
 
-  const recentCount = records.filter(r => {
-    const recordDate = new Date(r.date);
-    return recordDate >= thirtyDaysAgo;
-  }).length;
+  const recentCount = records.filter(r => new Date(r.date) >= thirtyDaysAgo).length;
 
-  summaryEl.innerHTML = `총 <b>${records.length}</b>건 &nbsp;&nbsp;|&nbsp;&nbsp; 최근 30일 <b>${recentCount}</b>건`;
+  summaryEl.innerHTML = `전체 데이터 <b>${records.length}</b>건 &nbsp; | &nbsp; 최근 30일 <b>${recentCount}</b>건`;
 }
 
 function renderChart() {
   if (chart) chart.destroy();
   const ctx = document.getElementById('chart').getContext('2d');
-  const chartRecords = [...records].reverse(); // 그래프는 과거 -> 최신순
+  const chartRecords = [...records].slice(0, 10).reverse(); // 최근 10개만 그래프 표시
   
   chart = new Chart(ctx, {
     type:'line',
     data:{
       labels: chartRecords.map(r=>r.date.substring(5)),
       datasets:[
-        { label:'최고', data:chartRecords.map(r=>r.sys), borderColor:'#ef4444', tension:0.2 },
-        { label:'최저', data:chartRecords.map(r=>r.dia), borderColor:'#3b82f6', tension:0.2 }
+        { label:'최고', data:chartRecords.map(r=>r.sys), borderColor:'#ef4444', backgroundColor:'#ef4444', tension:0.3 },
+        { label:'최저', data:chartRecords.map(r=>r.dia), borderColor:'#3b82f6', backgroundColor:'#3b82f6', tension:0.3 }
       ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      scales: { y: { beginAtZero: false } }
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: false, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
     }
   });
 }
 
-// 초기 실행
 persist();
 </script>
 </body>
