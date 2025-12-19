@@ -15,56 +15,48 @@ body {
   color: #1e293b;
 }
 
-/* 2. 상단 헤더 디자인 개선 */
+/* 1. 상단 헤더 디자인 - 상하 폭 슬림하게 수정 */
 .header {
   background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
   color: white;
-  padding: 24px 16px;
+  padding: 12px 16px; /* 상하 폭을 12px로 줄였습니다 */
   text-align: center;
-  border-radius: 0 0 24px 24px;
-  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
-  margin-bottom: 20px;
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 4px 8px rgba(30, 58, 138, 0.15);
+  margin-bottom: 16px;
 }
 
 .header h1 {
   margin: 0;
-  font-size: 22px;
+  font-size: 19px; /* 글자 크기도 살짝 조절 */
   font-weight: 800;
   letter-spacing: -0.5px;
 }
 
 .header p {
-  margin: 4px 0 0;
-  font-size: 12px;
-  opacity: 0.8;
-  font-weight: 400;
+  margin: 2px 0 0; /* 간격 축소 */
+  font-size: 11px;
+  opacity: 0.85;
 }
 
 .container { padding: 0 16px 40px; }
 
 .card {
   background:#fff;
-  padding:16px;
+  padding:14px;
   border-radius:16px;
-  margin-bottom:16px;
-  box-shadow:0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+  margin-bottom:12px;
+  box-shadow:0 2px 4px rgba(0,0,0,0.04);
 }
 
 input, button {
   width:100%;
-  padding:12px;
+  padding:10px;
   margin-top:8px;
   font-size:14px;
   border-radius:10px;
   border: 1px solid #e2e8f0;
   box-sizing: border-box;
-  transition: all 0.2s;
-}
-
-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 button {
@@ -72,10 +64,8 @@ button {
   color:#fff;
   font-weight:700;
   cursor: pointer;
-  margin-top: 12px;
+  margin-top: 10px;
 }
-
-button:active { transform: scale(0.98); }
 
 .btn-save { background:#ef4444; }
 .btn-list { background:#3b82f6; }
@@ -90,15 +80,10 @@ button:active { transform: scale(0.98); }
 }
 .view-toggle button { flex:1; margin-top:0; }
 
-.high { color:#dc2626; font-weight:700; }
-.warn { color:#f59e0b; font-weight:700; }
-.normal { color:#16a34a; }
-
-/* 1번 수정: 리스트 높이 고정 및 스크롤 */
+/* 리스트 높이 고정 및 스크롤 */
 #listWrapper {
   max-height: 200px; 
   overflow-y: auto;
-  border-top: 1px solid #f1f5f9;
 }
 
 .record {
@@ -106,7 +91,7 @@ button:active { transform: scale(0.98); }
   justify-content: space-between !important;
   align-items: center;
   height: 40px;
-  padding: 0 8px;
+  padding: 0 4px;
   border-bottom: 1px solid #f1f5f9;
   font-size: 14px;
 }
@@ -117,7 +102,7 @@ button:active { transform: scale(0.98); }
   width: 20px;
   height: 20px;
   margin-left: 12px;
-  accent-color: #ef4444; /* 체크박스 색상 변경 */
+  accent-color: #ef4444;
 }
 
 .edit-hint {
@@ -146,30 +131,30 @@ button:active { transform: scale(0.98); }
       <input id="dia" placeholder="최저혈압" type="number">
     </div>
     <input id="note" placeholder="메모 (선택사항)">
-    <button class="btn-save" id="saveBtn">오늘의 혈압 저장</button>
+    <button class="btn-save" id="saveBtn">기록 저장하기</button>
   </div>
 
   <div class="view-toggle">
-    <button class="btn-list" id="listBtn">기록 보기</button>
-    <button class="btn-chart" id="chartBtn">변화 그래프</button>
+    <button class="btn-list" id="listBtn">리스트</button>
+    <button class="btn-chart" id="chartBtn">그래프</button>
   </div>
 
-  <div class="card" id="summary" style="font-size:14px; text-align:center; color:#475569;"></div>
+  <div class="card" id="summary" style="font-size:13px; text-align:center; color:#64748b; padding:10px;"></div>
 
   <div class="card" id="chartView" style="display:none;">
-    <canvas id="chart" style="height:220px;"></canvas>
+    <canvas id="chart" style="height:200px;"></canvas>
   </div>
 
   <div class="card" id="listView">
-    <div id="editHint" class="edit-hint" style="display:none;">⚠️ 삭제할 항목의 체크박스를 선택하세요</div>
+    <div id="editHint" class="edit-hint" style="display:none;">⚠️ 삭제할 항목을 체크해 주세요</div>
     <div id="listWrapper">
       <div id="list"></div>
     </div>
   </div>
 
-  <div class="card" style="background: transparent; box-shadow: none; padding: 0;">
+  <div style="margin-top: 10px;">
     <button class="btn-edit" id="editBtn">데이터 편집 모드</button>
-    <button class="btn-export" id="exportBtn">엑셀(CSV) 내보내기</button>
+    <button class="btn-export" id="exportBtn">CSV 내보내기</button>
   </div>
 
 </div>
@@ -180,20 +165,11 @@ let records = JSON.parse(localStorage.getItem('bp') || '[]');
 let editMode = false;
 let chart;
 
-// 기본 날짜를 오늘로 설정
 date.value = new Date().toISOString().substring(0, 10);
 
 saveBtn.onclick = () => {
-  if (!date.value || !sys.value || !dia.value) {
-    alert("혈압 수치를 입력해주세요.");
-    return;
-  }
-  records.push({ 
-    date: date.value, 
-    sys: parseInt(sys.value), 
-    dia: parseInt(dia.value), 
-    note: note.value 
-  });
+  if (!date.value || !sys.value || !dia.value) return;
+  records.push({ date: date.value, sys: parseInt(sys.value), dia: parseInt(dia.value), note: note.value });
   sys.value = dia.value = note.value = '';
   persist();
 };
@@ -207,19 +183,19 @@ chartBtn.onclick = () => {
 
 editBtn.onclick = () => {
   editMode = !editMode;
-  editBtn.innerText = editMode ? "편집 완료" : "데이터 편집 모드";
-  editBtn.style.background = editMode ? "#000" : "#10b981";
+  editBtn.innerText = editMode ? "편집 완료 (저장)" : "데이터 편집 모드";
+  editBtn.style.background = editMode ? "#334155" : "#10b981";
   editHint.style.display = editMode ? 'block' : 'none';
   render();
 };
 
 exportBtn.onclick = () => {
-  if(records.length === 0) return alert('데이터가 없습니다.');
+  if(records.length === 0) return;
   let csv='\ufeff날짜,최고혈압,최저혈압,메모\n';
   records.forEach(r=>csv+=`${r.date},${r.sys},${r.dia},${r.note||''}\n`);
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([csv], {type: 'text/csv;charset=utf-8;'}));
-  a.download='MyBloodPressure.csv';
+  a.download='BloodPressure_Data.csv';
   a.click();
 };
 
@@ -238,11 +214,9 @@ function level(r){
 function render(){
   const listEl = document.getElementById('list');
   listEl.innerHTML='';
-
   records.forEach((r, i) => {
     const row = document.createElement('div');
     row.className = `record ${level(r)}`;
-
     const textSpan = document.createElement('span');
     textSpan.className = 'record-text';
     textSpan.innerHTML = `<strong>${r.date.substring(5)}</strong> | ${r.sys}/${r.dia} <small style="color:#94a3b8">${r.note?'('+r.note+')':''}</small>`;
@@ -251,42 +225,33 @@ function render(){
     if(editMode){
       const chk = document.createElement('input');
       chk.type = 'checkbox';
-      // 1번 수정: 체크박스가 먼저 체크되게 한 후 알림창 띄우기
       chk.onclick = (e) => {
         setTimeout(() => {
-          if(confirm('이 항목을 정말 삭제하시겠습니까?')){
+          if(confirm('정말 삭제하시겠습니까?')){
             records.splice(i, 1);
             persist();
-          } else {
-            e.target.checked = false;
-          }
-        }, 50); // 0.05초 지연으로 체크 표시 렌더링 시간 확보
+          } else { e.target.checked = false; }
+        }, 50);
       };
       row.appendChild(chk);
     }
     listEl.appendChild(row);
   });
-
   updateSummary();
 }
 
 function updateSummary() {
   const summaryEl = document.getElementById('summary');
-  const now = new Date();
   const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(now.getDate() - 30);
-  thirtyDaysAgo.setHours(0,0,0,0);
-
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const recentCount = records.filter(r => new Date(r.date) >= thirtyDaysAgo).length;
-
-  summaryEl.innerHTML = `전체 데이터 <b>${records.length}</b>건 &nbsp; | &nbsp; 최근 30일 <b>${recentCount}</b>건`;
+  summaryEl.innerHTML = `총 기록: <b>${records.length}</b>건 | 최근 30일: <b>${recentCount}</b>건`;
 }
 
 function renderChart() {
   if (chart) chart.destroy();
   const ctx = document.getElementById('chart').getContext('2d');
-  const chartRecords = [...records].slice(0, 10).reverse(); // 최근 10개만 그래프 표시
-  
+  const chartRecords = [...records].slice(0, 10).reverse();
   chart = new Chart(ctx, {
     type:'line',
     data:{
@@ -300,11 +265,10 @@ function renderChart() {
       responsive: true,
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: false, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+      scales: { y: { beginAtZero: false } }
     }
   });
 }
-
 persist();
 </script>
 </body>
