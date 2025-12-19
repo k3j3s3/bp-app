@@ -165,6 +165,12 @@ function exportCSV(){
   a.click();
 }
 
+  function removeRecord(index){
+  if(!confirm('이 기록을 삭제할까요?')) return;
+  records.splice(index, 1);
+  save();
+}
+
 render();
 </script>
 
